@@ -11,5 +11,5 @@ deploy:
   only:
     - main
   script:
-    - ssh $DEPLOY_USER@$DEPLOY_HOST mkdir -p $PROJECT_DIR
+    - ssh $DEPLOY_USER@$DEPLOY_HOST "cd $PROJECT_DIR && git pull"
     - ssh $DEPLOY_USER@$DEPLOY_HOST "cd $PROJECT_DIR && docker-compose up -d --build"
