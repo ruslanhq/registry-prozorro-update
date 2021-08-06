@@ -14,5 +14,7 @@ services:
     image: postgres
     restart: always
     environment:
-      POSTGRES_PASSWORD: example
+      POSTGRES_PASSWORD: ULS4RC14Td2J
+    volumes: 
+      - ./database:/var/lib/postgresql/data
     
