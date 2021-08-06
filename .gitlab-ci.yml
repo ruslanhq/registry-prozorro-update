@@ -1,0 +1,15 @@
+before_script:
+   - 'command -v ssh-agent >/dev/null || ( apt-get update -y && apt-get install openssh-client -y )'
+   - eval $(ssh-agent -s)
+   - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+   - mkdir -p ~/.ssh
+   - chmod 700 ~/.ssh
+   - echo "$SSH_KNOWN_HOSTS" >> ~/.ssh/known_hosts
+   - chmod 644 ~/.ssh/known_hosts
+
+deploy:
+  only:
+    - main
+  script:
+    - ssh $DEPLOY_USER@$DEPLOY_HOST mkdir -p $PROJECT_DIR
+    - ssh $DEPLOY_USER@$DEPLOY_HOST "cd $PROJECT_DIR && docker-compose up -d --build"
