@@ -13,6 +13,8 @@ class Configuration(BaseSettings):
     POSTGRES_USER: str
     POSTGRES_PASSWORD: str
     POSTGRES_DB: str
+    OBJECTS_API_URL: str
+    DATE_MODIFIED: str
 
     SQLALCHEMY_DATABASE_URI: Optional[PostgresDSN] = None
 
@@ -32,7 +34,7 @@ class Configuration(BaseSettings):
 
     class Config:
         case_sensitive = True
-        env_file = ".env"
+        env_file = ".env.example"
 
 
 settings = Configuration()
