@@ -4,9 +4,10 @@ from fastapi import FastAPI, Depends
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.services import ObjectHistoryManager
+from app.services import ObjectHistoryManager, AuctionsHistoryManager
 from app.src.settings import settings
 from app.src.database import get_db_instance
+from app.models import ObjectsHistory, AuctionsHistory
 
 app = FastAPI()
 
@@ -22,6 +23,17 @@ async def get_objects(
         date_modified: Optional[str] = settings.DATE_MODIFIED
 ):
     response = await ObjectHistoryManager(
-        url=settings.OBJECTS_API_URL
+        url=settings.OBJECTS_API_URL, model=ObjectsHistory
+    ).create(db=db, date_modified=date_modified)
+    return response
+
+
+@app.get("/get_auctions_history")
+async def get_objects(
+        db: AsyncSession = Depends(get_db_instance),
+        date_modified: Optional[str] = settings.DATE_MODIFIED
+):
+    response = await AuctionsHistoryManager(
+        url=settings.AUCTIONS_API_URL, model=AuctionsHistory
     ).create(db=db, date_modified=date_modified)
     return response
