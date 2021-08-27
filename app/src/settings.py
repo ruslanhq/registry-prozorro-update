@@ -14,6 +14,7 @@ class Configuration(BaseSettings):
     POSTGRES_PASSWORD: str
     POSTGRES_DB: str
     OBJECTS_API_URL: str
+    AUCTIONS_API_URL: str
     DATE_MODIFIED: str
 
     SQLALCHEMY_DATABASE_URI: Optional[PostgresDSN] = None

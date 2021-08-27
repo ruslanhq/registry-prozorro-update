@@ -18,7 +18,6 @@ async def get_db_instance() -> Session:
     db = async_session()
     try:
         yield db
-        await db.commit()
     except Exception as exc:
         await db.rollback()
         raise exc
