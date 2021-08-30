@@ -1,3 +1,4 @@
+from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, sessionmaker
@@ -10,6 +11,10 @@ async_session = sessionmaker(
     autocommit=False, autoflush=False,
     bind=engine, expire_on_commit=False, class_=AsyncSession
 )
+
+# Create sync_engine for logs
+engine = create_engine(settings.DATABASE_URI_SYNC, pool_pre_ping=True)
+sync_session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
 

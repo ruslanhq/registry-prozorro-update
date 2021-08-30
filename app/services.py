@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.src.base_services import BaseManager
 from app.src.http_requests import MakeRequest
+from app.src.logger import logger
 
 
 class ObjectHistoryManager(BaseManager):
@@ -34,6 +35,7 @@ class ObjectHistoryManager(BaseManager):
                 return status.HTTP_201_CREATED
             except Exception as exc:
                 print(exc)
+                logger.exception(exc)
                 return status.HTTP_408_REQUEST_TIMEOUT
         else:
             return await self.update(db=db)
@@ -49,6 +51,8 @@ class ObjectHistoryManager(BaseManager):
                 await self.update_or_create(db=db, uri=uri, model=self.model)
         except Exception as exc:
             print(exc)
+            logger.exception(exc)
+
             return status.HTTP_408_REQUEST_TIMEOUT
         return status.HTTP_200_OK
 
@@ -88,6 +92,8 @@ class AuctionsHistoryManager(BaseManager):
                 return status.HTTP_201_CREATED
             except Exception as exc:
                 print(exc)
+                logger.exception(exc)
+
                 return status.HTTP_408_REQUEST_TIMEOUT
         else:
             return await self.update(db=db)
@@ -108,5 +114,7 @@ class AuctionsHistoryManager(BaseManager):
                 await self.update_or_create(db=db, uri=url, model=self.model)
         except Exception as exc:
             print(exc)
+            logger.exception(exc)
+
             return status.HTTP_408_REQUEST_TIMEOUT
         return status.HTTP_200_OK
