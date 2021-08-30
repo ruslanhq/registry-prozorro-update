@@ -16,6 +16,8 @@ services:
     environment:
       POSTGRES_PASSWORD: ULS4RC14Td2J
       POSTGRES_DB: main
+    ports:
+      - 5432:5432
     volumes: 
       - ./database:/var/lib/postgresql/data
       - ./.docker/postgres:/docker-entrypoint-initdb.d
