@@ -8,6 +8,8 @@ from app.src.base_services import BaseManager
 from app.src.http_requests import MakeRequest
 from app.src.logger import logger
 
+from sqlalchemy.future import select
+
 
 class ObjectHistoryManager(BaseManager):
     def __init__(self, url, model):
@@ -61,6 +63,13 @@ class ObjectHistoryManager(BaseManager):
 
         return status.HTTP_200_OK
 
+    async def get_objects(self, db: AsyncSession, _id: str):
+        queryset = (
+            select(self.model)
+            .filter(self.model._id == _id)
+        )
+        return await self.result(db=db, queryset=queryset, to_instance=True)
+
 
 class AuctionsHistoryManager(BaseManager):
     def __init__(self, url, model):
@@ -107,3 +116,4 @@ class AuctionsHistoryManager(BaseManager):
             return status.HTTP_408_REQUEST_TIMEOUT
 
         return status.HTTP_200_OK
+
