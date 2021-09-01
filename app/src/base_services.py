@@ -1,7 +1,6 @@
 import datetime
 from typing import TypeVar
 
-from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
@@ -21,7 +20,7 @@ class BaseManager:
         return await (_scalar.first() if to_instance else _scalar.all())
 
     @staticmethod
-    def get_last_page(url: str, date_modified: str) -> int:
+    def _get_last_page(url: str, date_modified: str) -> int:
         """get the number of existing pages"""
         uri = url + date_modified + "?limit=100&page=10000"
         request = MakeRequest(uri=uri)
@@ -58,9 +57,8 @@ class BaseManager:
             _id: str, date_modified: str
     ):
         queryset = (
-            select(model).filter(
-                model._id == _id, model.date_modified == date_modified
-            )
+            select(model)
+            .filter(model._id == _id, model.date_modified == date_modified)
         )
         return await self.result(db=db, queryset=queryset, to_instance=True)
 
@@ -74,7 +72,8 @@ class BaseManager:
         queryset = (
             select(model.date_modified)
             .order_by(model.date_modified.desc())
-            .limit(1))
+            .limit(1)
+        )
         return await self.result(db=db, queryset=queryset, to_instance=True)
 
     async def check_and_create_object(
@@ -89,19 +88,17 @@ class BaseManager:
                 db=db, model=model,
                 objects=objects, index=index
             )
-
         return instance
 
     async def update_or_create(
-            self, db: AsyncSession, uri: str,
-            model: ModelType, date_modified: str
+            self, db: AsyncSession, uri: str, model: ModelType
     ):
         objects = await MakeRequest(uri=uri).do_request()
         for index in range(len(objects)):
             await self.check_and_create_object(
                 db=db, model=model, objects=objects,
                 index=index, _id=objects[index]['_id'],
-                date_modified=date_modified
+                date_modified=objects[index]['dateModified']
             )
 
     async def update_or_create_auctions(
@@ -110,10 +107,5 @@ class BaseManager:
         while start_date.strftime("%Y-%m-%d") !=\
                 yesterday_date.strftime("%Y-%m-%d"):
             start_date += datetime.timedelta(days=1)
-            url = prepare_url(
-                start_date.strftime('%Y-%m-%dT%H:%M:%SZ')
-            )
-            await self.update_or_create(
-                db=db, uri=url, model=model,
-                date_modified=start_date.strftime('%Y-%m-%dT%H:%M:%SZ')
-            )
+            url = prepare_url(start_date.strftime('%Y-%m-%dT%H:%M:%SZ'))
+            await self.update_or_create(db=db, uri=url, model=model)

@@ -1,6 +1,6 @@
 from typing import List, Optional, Dict
 
-from pydantic import BaseModel, Json
+from pydantic import BaseModel
 
 
 class ObjectsHistoryBase(BaseModel):

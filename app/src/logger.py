@@ -1,4 +1,4 @@
-from app.models import Log
+from app.prozorro_sale.models import Log
 from app.src.database import sync_session
 import traceback
 import logging

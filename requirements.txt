@@ -4,3 +4,4 @@ alembic==1.6.5
 httpx==0.18.2
 requests==2.26.0
 psycopg2==2.9.1
+fastapi-utils==0.2.1
