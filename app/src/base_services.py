@@ -1,3 +1,4 @@
+import datetime
 from typing import TypeVar
 
 from sqlalchemy import update
@@ -52,8 +53,15 @@ class BaseManager:
         await db.commit()
         return objects
 
-    async def get_object(self, db: AsyncSession, model: ModelType, _id: str):
-        queryset = (select(model).filter(model._id == _id))
+    async def get_object(
+            self, db: AsyncSession, model: ModelType,
+            _id: str, date_modified: str
+    ):
+        queryset = (
+            select(model).filter(
+                model._id == _id, model.date_modified == date_modified
+            )
+        )
         return await self.result(db=db, queryset=queryset, to_instance=True)
 
     async def count_rows(self, db: AsyncSession, model: ModelType):
@@ -69,35 +77,43 @@ class BaseManager:
             .limit(1))
         return await self.result(db=db, queryset=queryset, to_instance=True)
 
-    async def check_and_update_object(
+    async def check_and_create_object(
             self, db: AsyncSession, model: ModelType,
-            objects: list, index: int, _id: str
+            objects: list, index: int, _id: str, date_modified: str
     ):
-        instance = self.get_object(db=db, model=model, _id=_id)
-        if instance:
-            stmt = (
-                update(model)
-                .where(model._id == _id)
-                .values(
-                    date_modified=objects[index]['dateModified'],
-                    object=objects[index]
-                )
+        instance = await self.get_object(
+            db=db, model=model, _id=_id, date_modified=date_modified
+        )
+        if not instance:
+            await self.save_object(
+                db=db, model=model,
+                objects=objects, index=index
             )
-            await db.execute(stmt)
-            await db.commit()
+
         return instance
 
     async def update_or_create(
-            self, db: AsyncSession, uri: str, model: ModelType
+            self, db: AsyncSession, uri: str,
+            model: ModelType, date_modified: str
     ):
         objects = await MakeRequest(uri=uri).do_request()
         for index in range(len(objects)):
-            instance = await self.check_and_update_object(
+            await self.check_and_create_object(
                 db=db, model=model, objects=objects,
-                index=index, _id=objects[index]['_id']
+                index=index, _id=objects[index]['_id'],
+                date_modified=date_modified
             )
-            if not instance:
-                await self.save_object(
-                    db=db, model=model,
-                    objects=objects, index=index
-                )
+
+    async def update_or_create_auctions(
+            self, start_date, yesterday_date, db, model, prepare_url
+    ):
+        while start_date.strftime("%Y-%m-%d") !=\
+                yesterday_date.strftime("%Y-%m-%d"):
+            start_date += datetime.timedelta(days=1)
+            url = prepare_url(
+                start_date.strftime('%Y-%m-%dT%H:%M:%SZ')
+            )
+            await self.update_or_create(
+                db=db, uri=url, model=model,
+                date_modified=start_date.strftime('%Y-%m-%dT%H:%M:%SZ')
+            )
