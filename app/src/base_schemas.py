@@ -1,10 +1,10 @@
 from typing import List, Optional, Dict
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class ObjectsHistoryBase(BaseModel):
-    _id: str
+    id: str = Field(..., alias='_id')
     registry_object_id: str
     date_published: str
     date_modified: str
@@ -23,7 +23,7 @@ class MetaInfoSchema(BaseModel):
 
 
 class ResponseSchema(BaseModel):
-    items: Optional[List]
+    items: List[ObjectsHistoryBase]
     meta_info: MetaInfoSchema
 
     class Config:

@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
 # Let the DB start
-sleep 30;
+sleep 20;
 # Run migrations
 alembic upgrade head

@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, Query
 
 from starlette.status import HTTP_404_NOT_FOUND
 
@@ -14,13 +14,14 @@ from app.prozorro_sale.services import (
 )
 from app.src.settings import settings
 from app.src.database import get_db_instance
-from app.src.base_schemas import ObjectsHistoryBase
+from app.src.base_schemas import ResponseSchema, ObjectsHistoryBase
 
 router = InferringRouter(tags=['api'])
 
 
 @cbv(router)
 class ObjectsViewSet(ObjectHistoryManager):
+    use_pagination = True
     schema = ObjectsHistoryBase
     session: AsyncSession = Depends(get_db_instance)
 
@@ -30,12 +31,18 @@ class ObjectsViewSet(ObjectHistoryManager):
     ):
         return await self.create(db=self.session, date_modified=date_modified)
 
-    @router.get('/objects/{_id}')
-    async def detail_objects_by_id(self, _id: str):
-        item = await self.get_objects_by_id(db=self.session, _id=_id)
+    @router.get('/objects/{_id}', response_model=ResponseSchema)
+    async def detail_objects_by_id(
+            self, _id: str,
+            page: int = Query(1, gt=0),
+            page_size: int = Query(1, gt=0)
+    ):
+        item = await self.get_objects_by_id(
+            db=self.session, _id=_id, page=page, page_size=page_size
+        )
         if not item:
             raise HTTPException(status_code=HTTP_404_NOT_FOUND)
-        return item
+        return ResponseSchema.from_orm(item)
 
 
 @cbv(router)

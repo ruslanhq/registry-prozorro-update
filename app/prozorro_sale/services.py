@@ -62,12 +62,16 @@ class ObjectHistoryManager(BaseManager):
 
         return status.HTTP_200_OK
 
-    async def get_objects_by_id(self, db: AsyncSession, _id: str):
+    async def get_objects_by_id(
+            self, db: AsyncSession, _id: str, page: int, page_size: int
+    ):
         queryset = (
             select(self.model)
             .filter(self.model._id == _id)
         )
-        return await self.result(db=db, queryset=queryset)
+        return await self.get_list(
+            db=db, queryset=queryset, page=page, page_size=page_size
+        )
 
 
 class AuctionsHistoryManager(BaseManager):

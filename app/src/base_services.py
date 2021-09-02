@@ -1,17 +1,22 @@
 import datetime
-from typing import TypeVar
+
+from typing import TypeVar, ClassVar
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.src.database import Base
 from app.src.http_requests import MakeRequest
+from app.src.paginations import PagePagination
 
 # custom type for SQLAlchemy model
 ModelType = TypeVar("ModelType", bound=Base)
 
 
 class BaseManager:
+    schema = None
+    use_pagination = False
+    pagination_class = PagePagination
 
     @staticmethod
     async def result(db: AsyncSession, queryset, to_instance=False):
@@ -109,3 +114,19 @@ class BaseManager:
             start_date += datetime.timedelta(days=1)
             url = prepare_url(start_date.strftime('%Y-%m-%dT%H:%M:%SZ'))
             await self.update_or_create(db=db, uri=url, model=model)
+
+    async def get_list(
+            self, db: AsyncSession, queryset: ClassVar,
+            page_size: int, page: int = 1
+    ):
+        if self.use_pagination:
+            total = len(await self.result(db, queryset))
+            queryset = self.pagination_class.get_query(
+                query=queryset, page=page, page_size=page_size
+            )
+            items = await self.result(db, queryset=queryset)
+            return self.pagination_class(
+                items, page, page_size, total, self.schema
+            )
+        else:
+            return await self.result(db=db, queryset=queryset)
