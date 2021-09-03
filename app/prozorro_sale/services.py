@@ -84,13 +84,9 @@ class AuctionsHistoryManager(BaseManager):
     async def create(self, db: AsyncSession, date_modified: str):
         exist_row = await self.count_rows(db=db, model=self.model)
         if not exist_row:
-            start_date = datetime.datetime.strptime(
-                date_modified, '%Y-%m-%dT%H:%M:%SZ'
-            )
-            yesterday_date = datetime.date.today() - datetime.timedelta(1)
             try:
                 await self.update_or_create_auctions(
-                    start_date=start_date, yesterday_date=yesterday_date, db=db,
+                    start_date=date_modified, db=db,
                     model=self.model, prepare_url=self._prepare_url
                 )
                 return status.HTTP_201_CREATED
@@ -99,22 +95,15 @@ class AuctionsHistoryManager(BaseManager):
                 logger.exception(exc)
                 return status.HTTP_408_REQUEST_TIMEOUT
         else:
-            return await self.update(db=db)
-
-    async def update(self, db: AsyncSession):
-        last_date = await self.get_last_date(db=db, model=self.model)
-        start_date = datetime.datetime.strptime(
-            last_date, '%Y-%m-%dT%H:%M:%S.%fZ'
-        ).replace(microsecond=0)
-        yesterday_date = datetime.date.today() - datetime.timedelta(1)
-        try:
-            await self.update_or_create_auctions(
-                start_date=start_date, yesterday_date=yesterday_date, db=db,
-                model=self.model, prepare_url=self._prepare_url
-            )
-        except Exception as exc:
-            print(exc)
-            logger.exception(exc)
-            return status.HTTP_408_REQUEST_TIMEOUT
-
+            last_date = await self.get_last_date(db=db, model=self.model)
+            try:
+                await self.update_or_create_auctions(
+                    db=db, newest_date=last_date,
+                    model=self.model, prepare_url=self._prepare_url
+                )
+            except Exception as exc:
+                print(exc)
+                logger.exception(exc)
+                return status.HTTP_408_REQUEST_TIMEOUT
         return status.HTTP_200_OK
+

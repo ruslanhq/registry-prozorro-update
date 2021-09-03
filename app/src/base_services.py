@@ -88,6 +88,7 @@ class BaseManager:
         instance = await self.get_object(
             db=db, model=model, _id=_id, date_modified=date_modified
         )
+        print(instance)
         if not instance:
             await self.save_object(
                 db=db, model=model,
@@ -107,13 +108,27 @@ class BaseManager:
             )
 
     async def update_or_create_auctions(
-            self, start_date, yesterday_date, db, model, prepare_url
+            self, db, model, prepare_url, newest_date=None, start_date=None
     ):
-        while start_date.strftime("%Y-%m-%d") !=\
-                yesterday_date.strftime("%Y-%m-%d"):
-            start_date += datetime.timedelta(days=1)
-            url = prepare_url(start_date.strftime('%Y-%m-%dT%H:%M:%SZ'))
+        yesterday_date = datetime.datetime.today() - datetime.timedelta(1)
+        if start_date:
+            last_date = datetime.datetime.strptime(
+                start_date, '%Y-%m-%dT%H:%M:%SZ'
+            )
+            url = prepare_url(start_date)
+        else:
+            last_date = datetime.datetime.strptime(
+                newest_date, '%Y-%m-%dT%H:%M:%S.%fZ'
+            )
+            url = prepare_url(newest_date)
+
+        while last_date < yesterday_date:
             await self.update_or_create(db=db, uri=url, model=model)
+            last_date_str = await self.get_last_date(db=db, model=model)
+            url = prepare_url(last_date_str)
+            last_date = datetime.datetime.strptime(
+                last_date_str, '%Y-%m-%dT%H:%M:%S.%fZ'
+            )
 
     async def get_list(
             self, db: AsyncSession, queryset: ClassVar,
