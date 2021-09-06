@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 
-from app.prozorro_sale import views as objects
+from app.prozorro_sale.views import router_obj, router_auc
 
 app = FastAPI()
-app.include_router(objects.router)
+app.include_router(router_obj)
+app.include_router(router_auc)

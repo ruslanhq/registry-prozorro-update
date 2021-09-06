@@ -23,10 +23,11 @@ from app.src.base_schemas import (
     AuctionsHistoryBase, ResponseSchemaAuctions
 )
 
-router = InferringRouter(tags=['api'])
+router_obj = InferringRouter(tags=['objects_history'])
+router_auc = InferringRouter(tags=['auctions_history'])
 
 
-@cbv(router)
+@cbv(router_obj)
 class ObjectsViewSet(ObjectHistoryManager):
     use_pagination = True
     schema = ObjectsHistoryBase
@@ -34,13 +35,13 @@ class ObjectsViewSet(ObjectHistoryManager):
     model = ObjectsHistory
     session: AsyncSession = Depends(get_db_instance)
 
-    @router.get("/get_objects_history")
+    @router_obj.get("/get_objects_history")
     async def get_and_save_objects(
             self, date_modified: Optional[str] = settings.DATE_MODIFIED
     ):
         return await self.create(db=self.session, date_modified=date_modified)
 
-    @router.get('/versions/object/{_id}', response_model=ResponseSchemaObjects)
+    @router_obj.get('/versions/object/{_id}', response_model=ResponseSchemaObjects)
     async def versions_object_by_id(
             self, _id: str,
             page: int = Query(1, gt=0),
@@ -53,7 +54,7 @@ class ObjectsViewSet(ObjectHistoryManager):
             raise HTTPException(status_code=HTTP_404_NOT_FOUND)
         return ResponseSchemaObjects.from_orm(items)
 
-    @router.get('/object/{_id}', response_model=ObjectsHistoryBase)
+    @router_obj.get('/object/{_id}', response_model=ObjectsHistoryBase)
     async def object_by_id(self, _id: str):
         item = await self.api_class(self.model).get_object_by_id(
             db=self.session, _id=_id
@@ -62,7 +63,7 @@ class ObjectsViewSet(ObjectHistoryManager):
             raise HTTPException(status_code=HTTP_404_NOT_FOUND)
         return self.schema.from_orm(item)
 
-    @router.get('/objects/', response_model=ResponseSchemaObjects)
+    @router_obj.get('/objects/', response_model=ResponseSchemaObjects)
     async def list_objects(
             self, date_modified: datetime.datetime = settings.DATE_MODIFIED,
             page: int = Query(1, gt=0),
@@ -77,7 +78,7 @@ class ObjectsViewSet(ObjectHistoryManager):
         return ResponseSchemaObjects.from_orm(items)
 
 
-@cbv(router)
+@cbv(router_auc)
 class AuctionsViewSet(AuctionsHistoryManager):
     use_pagination = True
     schema = AuctionsHistoryBase
@@ -85,13 +86,13 @@ class AuctionsViewSet(AuctionsHistoryManager):
     model = AuctionsHistory
     session: AsyncSession = Depends(get_db_instance)
 
-    @router.get("/get_auctions_history")
+    @router_auc.get("/get_auctions_history")
     async def get_objects(
             self, date_modified: Optional[str] = settings.DATE_MODIFIED
     ):
         return await self.create(db=self.session, date_modified=date_modified)
 
-    @router.get(
+    @router_auc.get(
         '/versions/auctions/{_id}', response_model=ResponseSchemaAuctions
     )
     async def versions_object_by_id(
@@ -106,7 +107,7 @@ class AuctionsViewSet(AuctionsHistoryManager):
             raise HTTPException(status_code=HTTP_404_NOT_FOUND)
         return ResponseSchemaAuctions.from_orm(items)
 
-    @router.get('/auction/{_id}', response_model=AuctionsHistoryBase)
+    @router_auc.get('/auction/{_id}', response_model=AuctionsHistoryBase)
     async def object_by_id(self, _id: str):
         item = await self.api_class(self.model).get_object_by_id(
             db=self.session, _id=_id
@@ -115,7 +116,7 @@ class AuctionsViewSet(AuctionsHistoryManager):
             raise HTTPException(status_code=HTTP_404_NOT_FOUND)
         return self.schema.from_orm(item)
 
-    @router.get('/auctions/', response_model=ResponseSchemaAuctions)
+    @router_auc.get('/auctions/', response_model=ResponseSchemaAuctions)
     async def list_objects(
             self, date_modified: datetime.datetime = settings.DATE_MODIFIED,
             page: int = Query(1, gt=0),
