@@ -10,8 +10,6 @@ from app.src.logger import logger
 from app.src.settings import settings
 from app.prozorro_sale.models import ObjectsHistory, AuctionsHistory
 
-from sqlalchemy.future import select
-
 
 class ObjectHistoryManager(BaseManager):
     url = settings.OBJECTS_API_URL
@@ -59,19 +57,7 @@ class ObjectHistoryManager(BaseManager):
             print(exc)
             logger.exception(exc)
             return status.HTTP_408_REQUEST_TIMEOUT
-
         return status.HTTP_200_OK
-
-    async def get_objects_by_id(
-            self, db: AsyncSession, _id: str, page: int, page_size: int
-    ):
-        queryset = (
-            select(self.model)
-            .filter(self.model._id == _id)
-        )
-        return await self.get_list(
-            db=db, queryset=queryset, page=page, page_size=page_size
-        )
 
 
 class AuctionsHistoryManager(BaseManager):
@@ -106,4 +92,3 @@ class AuctionsHistoryManager(BaseManager):
                 logger.exception(exc)
                 return status.HTTP_408_REQUEST_TIMEOUT
         return status.HTTP_200_OK
-

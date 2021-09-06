@@ -14,6 +14,17 @@ class ObjectsHistoryBase(BaseModel):
         orm_mode = True
 
 
+class AuctionsHistoryBase(BaseModel):
+    id: str = Field(..., alias='_id')
+    auction_id: str
+    date_published: str
+    date_modified: str
+    object: Optional[Dict]
+
+    class Config:
+        orm_mode = True
+
+
 class MetaInfoSchema(BaseModel):
     page: int
     pages: int
@@ -22,8 +33,16 @@ class MetaInfoSchema(BaseModel):
     has_previous: bool
 
 
-class ResponseSchema(BaseModel):
+class ResponseSchemaObjects(BaseModel):
     items: List[ObjectsHistoryBase]
+    meta_info: MetaInfoSchema
+
+    class Config:
+        orm_mode = True
+
+
+class ResponseSchemaAuctions(BaseModel):
+    items: List[AuctionsHistoryBase]
     meta_info: MetaInfoSchema
 
     class Config:

@@ -88,7 +88,6 @@ class BaseManager:
         instance = await self.get_object(
             db=db, model=model, _id=_id, date_modified=date_modified
         )
-        print(instance)
         if not instance:
             await self.save_object(
                 db=db, model=model,
@@ -145,3 +144,43 @@ class BaseManager:
             )
         else:
             return await self.result(db=db, queryset=queryset)
+
+
+class BaseAPIManager(BaseManager):
+    use_pagination = True
+    pagination_class = PagePagination
+
+    def __init__(self, model):
+        self.model = model
+
+    async def get_versions_object_by_id(
+            self, db: AsyncSession, _id: str, page: int, page_size: int
+    ):
+        queryset = (
+            select(self.model)
+            .filter(self.model._id == _id)
+        )
+        return await self.get_list(
+            db=db, queryset=queryset, page=page, page_size=page_size
+        )
+
+    async def get_object_by_id(self, db: AsyncSession, _id: str):
+        queryset = (
+            select(self.model)
+            .filter(self.model._id == _id)
+            .order_by(self.model.date_modified.desc())
+            .limit(1)
+        )
+        return await self.result(db=db, queryset=queryset, to_instance=True)
+
+    async def get_list_objects(
+            self, db: AsyncSession, date_modified: str,
+            page: int, page_size: int
+    ):
+        queryset = (
+            select(self.model)
+            .filter(self.model.date_modified >= date_modified)
+        )
+        return await self.get_list(
+            db=db, queryset=queryset, page=page, page_size=page_size
+        )
