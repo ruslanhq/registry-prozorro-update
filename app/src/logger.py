@@ -26,6 +26,9 @@ class SQLAlchemyHandler(logging.Handler):
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
+logger_info = logging.getLogger(__name__)
+logger_info.setLevel(logging.INFO)
+
 ch = SQLAlchemyHandler()
 
 formatter = logging.Formatter(
@@ -33,3 +36,4 @@ formatter = logging.Formatter(
 )
 ch.setFormatter(formatter)
 logger.addHandler(ch)
+logger_info.addHandler(ch)

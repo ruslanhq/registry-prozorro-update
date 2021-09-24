@@ -46,12 +46,17 @@ class BaseManager:
             new_object.auction_id = objects[index][
                 'auctionId'
             ]
-        new_object.date_published = objects[index][
-            'datePublished'
-        ]
-        new_object.date_modified = objects[index][
-            'dateModified'
-        ]
+
+        # convert to timestamp
+        date_published = datetime.datetime.strptime(
+            objects[index]['datePublished'], '%Y-%m-%dT%H:%M:%S.%fZ'
+        )
+        date_modified = datetime.datetime.strptime(
+            objects[index]['dateModified'], '%Y-%m-%dT%H:%M:%S.%fZ'
+        )
+
+        new_object.date_published = date_published
+        new_object.date_modified = date_modified
         new_object.object = objects[index]
         db.add(new_object)
         await db.commit()
@@ -61,9 +66,12 @@ class BaseManager:
             self, db: AsyncSession, model: ModelType,
             _id: str, date_modified: str
     ):
+        date = datetime.datetime.strptime(
+            date_modified, '%Y-%m-%dT%H:%M:%S.%fZ'
+         )
         queryset = (
             select(model)
-            .filter(model._id == _id, model.date_modified == date_modified)
+            .filter(model._id == _id, model.date_modified == date)
         )
         return await self.result(db=db, queryset=queryset, to_instance=True)
 
@@ -116,18 +124,14 @@ class BaseManager:
             )
             url = prepare_url(start_date)
         else:
-            last_date = datetime.datetime.strptime(
-                newest_date, '%Y-%m-%dT%H:%M:%S.%fZ'
-            )
-            url = prepare_url(newest_date)
+            last_date = newest_date
+            url = prepare_url(newest_date.strftime("%Y-%m-%dT%H:%M:%SZ"))
 
         while last_date < yesterday_date:
             await self.update_or_create(db=db, uri=url, model=model)
-            last_date_str = await self.get_last_date(db=db, model=model)
-            url = prepare_url(last_date_str)
-            last_date = datetime.datetime.strptime(
-                last_date_str, '%Y-%m-%dT%H:%M:%S.%fZ'
-            )
+            last_date_dt = await self.get_last_date(db=db, model=model)
+            url = prepare_url(last_date_dt.strftime("%Y-%m-%dT%H:%M:%SZ"))
+            last_date = last_date_dt
 
     async def get_list(
             self, db: AsyncSession, queryset: ClassVar,
@@ -174,12 +178,12 @@ class BaseAPIManager(BaseManager):
         return await self.result(db=db, queryset=queryset, to_instance=True)
 
     async def get_list_objects(
-            self, db: AsyncSession, date_modified: str,
+            self, db: AsyncSession, date_modified: datetime,
             page: int, page_size: int
     ):
         queryset = (
             select(self.model)
-            .filter(self.model.date_modified >= date_modified)
+            .filter(self.model.date_modified >= date_modified.replace(tzinfo=None))
         )
         return await self.get_list(
             db=db, queryset=queryset, page=page, page_size=page_size

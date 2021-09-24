@@ -1,3 +1,4 @@
+import datetime
 from typing import List, Optional, Dict
 
 from pydantic import BaseModel, Field
@@ -6,8 +7,8 @@ from pydantic import BaseModel, Field
 class ObjectsHistoryBase(BaseModel):
     id: str = Field(..., alias='_id')
     registry_object_id: str
-    date_published: str
-    date_modified: str
+    date_published: datetime.datetime
+    date_modified: datetime.datetime
     object: Optional[Dict]
 
     class Config:
@@ -17,8 +18,8 @@ class ObjectsHistoryBase(BaseModel):
 class AuctionsHistoryBase(BaseModel):
     id: str = Field(..., alias='_id')
     auction_id: str
-    date_published: str
-    date_modified: str
+    date_published: datetime.datetime
+    date_modified: datetime.datetime
     object: Optional[Dict]
 
     class Config:

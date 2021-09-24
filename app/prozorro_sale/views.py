@@ -35,13 +35,15 @@ class ObjectsViewSet(ObjectHistoryManager):
     model = ObjectsHistory
     session: AsyncSession = Depends(get_db_instance)
 
-    @router_obj.get("/get_objects_history")
+    @router_obj.post("/get_objects_history")
     async def get_and_save_objects(
             self, date_modified: Optional[str] = settings.DATE_MODIFIED
     ):
         return await self.create(db=self.session, date_modified=date_modified)
 
-    @router_obj.get('/versions/object/{_id}', response_model=ResponseSchemaObjects)
+    @router_obj.get(
+        '/versions/object/{_id}', response_model=ResponseSchemaObjects
+    )
     async def versions_object_by_id(
             self, _id: str,
             page: int = Query(1, gt=0),
@@ -70,7 +72,7 @@ class ObjectsViewSet(ObjectHistoryManager):
             page_size: int = Query(1, gt=0)
     ):
         items = await self.api_class(self.model).get_list_objects(
-            db=self.session, date_modified=date_modified.isoformat(),
+            db=self.session, date_modified=date_modified,
             page=page, page_size=page_size
         )
         if not items:
@@ -86,7 +88,7 @@ class AuctionsViewSet(AuctionsHistoryManager):
     model = AuctionsHistory
     session: AsyncSession = Depends(get_db_instance)
 
-    @router_auc.get("/get_auctions_history")
+    @router_auc.post("/get_auctions_history")
     async def get_objects(
             self, date_modified: Optional[str] = settings.DATE_MODIFIED
     ):
@@ -123,7 +125,7 @@ class AuctionsViewSet(AuctionsHistoryManager):
             page_size: int = Query(1, gt=0)
     ):
         items = await self.api_class(self.model).get_list_objects(
-            db=self.session, date_modified=date_modified.isoformat(),
+            db=self.session, date_modified=date_modified,
             page=page, page_size=page_size
         )
         if not items:
